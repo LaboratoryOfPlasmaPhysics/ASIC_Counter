@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asic_counter"
+version = "0.1.0"
+description = "A project using Amaranth HDL for testing a particle detector ASIC design."
+authors = [
+    { name = "Alexis Jeandet", email = "alexis.jeandet@member.fsf.org" }
+]
+license = "GPL-3.0-or-later"
+dependencies = ["amaranth", 
+    "amaranth-boards @ git+https://github.com/amaranth-lang/amaranth-boards.git", 
+    "amaranth-stdio @ git+https://github.com/amaranth-lang/amaranth-stdio.git"]
+
+requires-python = ">=3.10,<3.14"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "black",
+    "flake8",
+    "mypy",
+    "cocotb",
+    "cocotb-test"
+]
+
+[tool.setuptools]
+packages = ["asic_counter"]
+
+[tool.setuptools.package-data]
+asic_counter = ["*.v", "*.sv", "*.json"]
