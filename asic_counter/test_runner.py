@@ -1,9 +1,18 @@
 from cocotb_test.simulator import run as _run
+from cocotb.triggers import RisingEdge
 from amaranth.back import verilog
 from amaranth import Signal
 from tempfile import NamedTemporaryFile
 import inspect
 import os
+
+async def reset_dut(dut):
+    dut.rst.value = 1
+    for _ in range(5):  
+        await RisingEdge(dut.clk)
+    dut.rst.value = 0
+    for _ in range(5):  
+        await RisingEdge(dut.clk)
 
 def find_dut_ports(dut):
     # Heuristic: look for Signals that are not internal (e.g., not starting with "_")

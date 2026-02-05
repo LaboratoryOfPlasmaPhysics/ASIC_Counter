@@ -18,12 +18,19 @@ This project leverages the Amaranth HDL to test a particle detector ASIC design.
 
 ## Getting Started
 
+You first need install Lattice iCE40 toolchain (yosys, nextpnr, icestorm) and iverilog for simulation. On Fedora, you can install them using:
+```bash
+sudo dnf install iverilog icestorm yosys nextpnr python3-pip
+```
+
+You can also have a look to the [OSS CAD Suite](https://github.com/YosysHQ/oss-cad-suite-build) project, which provides pre-built toolchain binaries for various platforms.
+
 1. Clone the repository:
     ```bash
     git clone <repository_url>
     cd ASIC_Counter
     ```
-2. Install dependencies using uv:
+2. Install python dependencies using uv:
     ```bash
     uv venv
     uv pip install -e .[dev]

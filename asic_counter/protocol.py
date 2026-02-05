@@ -67,40 +67,47 @@ class Encoder(Elaboratable):
         self.data_in = Signal(8)
         self.in_rdy = Signal()
         self.in_ack = Signal()
+        self.eof = Signal()
         
-        self.data_out = Signal(8)
-        self.out_rdy = Signal()
-        self.out_ack = Signal()
+        self.uart_data_out = Signal(8)
+        self.uart_rdy = Signal()
+        self.uart_ack = Signal()
+        
         
     def elaborate(self, platform):
         m = Module()
         
-        # For simplicity, we just output the command and value when out_rdy is high
         with m.FSM(init="Idle") as fsm:
             with m.State("Idle"):
-                with m.If(self.out_rdy & self.in_rdy):
-                    m.d.sync += self.data_out.eq(0xA5)  # Start word
+                with m.If(self.uart_rdy & self.in_ack):
+                    m.d.sync += self.uart_data_out.eq(0xA5)  # Start word
+                    m.d.sync += self.uart_ack.eq(1)
                     m.next = "Second start word"
+                with m.Else():
+                    m.d.sync += self.uart_ack.eq(0)
+                m.d.sync += self.in_rdy.eq(self.uart_rdy) 
             with m.State("Second start word"):
-                with m.If(self.out_ack):
-                    m.d.sync += self.data_out.eq(0x0F)  # Second start word
-                    m.next = "Output second start word"
-            with m.State("Output second start word"):
-                with m.If(self.out_ack):
-                    # For simplicity, we just output a fixed command and value
-                    m.d.sync += self.data_out.eq(0b101)  # Command
-                    m.next = "Output command"
-            with m.State("Output command"):
-                with m.If(self.out_ack):
-                    m.d.sync += self.data_out.eq(0x34)  # Value LSB
-                    m.next = "Output value LSB"
-            with m.State("Output value LSB"):
-                with m.If(self.out_ack):
-                    m.d.sync += self.data_out.eq(0x12)  # Value MSB
-                    m.next = "Output value MSB"
-            with m.State("Output value MSB"):
-                with m.If(self.out_ack):
-                    m.d.sync += self.out_rdy.eq(0)  # Done
+                with m.If(self.uart_rdy & self.in_ack):
+                    m.d.sync += self.uart_data_out.eq(0x0F)  # Second start word
+                    m.next = "Output values"
+                with m.Else():
+                    m.d.sync += self.uart_ack.eq(0)
+                    m.d.sync += self.in_rdy.eq(self.uart_rdy) 
+            with m.State("Output values"):
+                with m.If(self.uart_rdy & self.in_ack):
+                    m.d.sync += self.uart_data_out.eq(self.data_in)
+                with m.Else():
+                    m.d.sync += self.uart_ack.eq(0)
+                    m.d.sync += self.in_rdy.eq(self.uart_rdy) 
+                with m.If(self.eof):
+                    m.next = "EOF"
+            with m.State("EOF"):
+                m.d.sync += self.uart_data_out.eq(0xFF)  # EOF marker
+                with m.If(self.uart_rdy & self.in_ack):
+                    m.d.sync += self.uart_ack.eq(1)
                     m.next = "Idle"
+                with m.Else():
+                    m.d.sync += self.uart_ack.eq(0)
+                    m.d.sync += self.in_rdy.eq(self.uart_rdy) 
         
         return m

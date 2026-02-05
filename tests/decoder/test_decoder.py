@@ -2,16 +2,9 @@ import cocotb
 
 from cocotb.triggers import Timer, RisingEdge
 from cocotb.clock import Clock
-from asic_counter.test_runner import run_cocotb
+from asic_counter.test_runner import run_cocotb, reset_dut
 from asic_counter.protocol import Decoder
 
-async def reset_dut(dut):
-    dut.rst.value = 1
-    for _ in range(5):  
-        await RisingEdge(dut.clk)
-    dut.rst.value = 0
-    for _ in range(5):  
-        await RisingEdge(dut.clk)
 
 async def send_cmd(dut, cmd, value):
     # Send start sequence
