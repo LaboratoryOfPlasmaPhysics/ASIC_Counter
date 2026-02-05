@@ -4,7 +4,7 @@ import argparse
 
 from amaranth import *
 
-class Protocol(Elaboratable):
+class Decoder(Elaboratable):
     
     def __init__(self):
         super().__init__()
@@ -57,5 +57,50 @@ class Protocol(Elaboratable):
                 with m.If(self.out_ack):
                     m.d.sync += self.out_rdy.eq(0)
                     m.next = "Wait for start word"  
+        
+        return m
+    
+    
+class Encoder(Elaboratable):
+    def __init__(self):
+        super().__init__()
+        self.data_in = Signal(8)
+        self.in_rdy = Signal()
+        self.in_ack = Signal()
+        
+        self.data_out = Signal(8)
+        self.out_rdy = Signal()
+        self.out_ack = Signal()
+        
+    def elaborate(self, platform):
+        m = Module()
+        
+        # For simplicity, we just output the command and value when out_rdy is high
+        with m.FSM(init="Idle") as fsm:
+            with m.State("Idle"):
+                with m.If(self.out_rdy & self.in_rdy):
+                    m.d.sync += self.data_out.eq(0xA5)  # Start word
+                    m.next = "Second start word"
+            with m.State("Second start word"):
+                with m.If(self.out_ack):
+                    m.d.sync += self.data_out.eq(0x0F)  # Second start word
+                    m.next = "Output second start word"
+            with m.State("Output second start word"):
+                with m.If(self.out_ack):
+                    # For simplicity, we just output a fixed command and value
+                    m.d.sync += self.data_out.eq(0b101)  # Command
+                    m.next = "Output command"
+            with m.State("Output command"):
+                with m.If(self.out_ack):
+                    m.d.sync += self.data_out.eq(0x34)  # Value LSB
+                    m.next = "Output value LSB"
+            with m.State("Output value LSB"):
+                with m.If(self.out_ack):
+                    m.d.sync += self.data_out.eq(0x12)  # Value MSB
+                    m.next = "Output value MSB"
+            with m.State("Output value MSB"):
+                with m.If(self.out_ack):
+                    m.d.sync += self.out_rdy.eq(0)  # Done
+                    m.next = "Idle"
         
         return m

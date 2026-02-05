@@ -13,10 +13,8 @@ results.xml
 *.user
 *.user*
 *.log
+*.lock
 *.json
 .cache/*
-.scon*
 .ipy*
 **/__pycache__/
-SConstruct
-app/fusion_firmware/modm

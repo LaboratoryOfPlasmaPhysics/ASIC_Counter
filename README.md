@@ -25,7 +25,7 @@ This project leverages the Amaranth HDL to test a particle detector ASIC design.
     ```
 2. Install dependencies using uv:
     ```bash
-    uv venv create --python=3.13
+    uv venv
     uv pip install -e .[dev]
     ```
 3. Run tests:

@@ -1,0 +1,33 @@
+name: Test and build firmware
+
+on:
+  release:
+    types: [ published ]
+  push:
+  pull_request:
+
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:43
+    steps:
+      - uses: actions/checkout@v4
+      - name: install dependencies
+        run: |
+          dnf update -y && dnf install -y iverilog icestorm yosys nextpnr python3-pip git
+          pip install uv
+      - name: run tests
+        run: |
+          uv venv
+          uv pip install -e .[dev]
+          uv run pytest
+      - name: build firmware
+        run: |
+          uv run python -m asic_counter.top --channels-count 10
+      - name: Save firmware as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASIC_Counter-firmware
+          path: build
